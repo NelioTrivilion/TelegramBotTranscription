@@ -1,0 +1,43 @@
+# --- Secretos ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- n8n (datos locales / exports con credenciales) ---
+.n8n/
+n8n-data/
+data/
+*.sqlite
+*.sqlite3
+
+# --- Dependencias ---
+node_modules/
+package-lock.json
+
+# --- Logs y temporales ---
+*.log
+npm-debug.log*
+logs/
+tmp/
+temp/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editores ---
+.vscode/
+.idea/
+*.swp
+
+# --- Capturas locales sin curar ---
+assets/capturas-locales/
+
+# --- Archivos de origen pesados (usar Releases o un enlace si hace falta) ---
+*.mp4
+*.mov
+*.avi
+*.mkv

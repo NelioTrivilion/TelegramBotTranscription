@@ -1,0 +1,867 @@
+{
+  "name": "Telegram Resumen Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ !!$json.callback_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "16fd5fbb-bf14-4fa4-824e-8e725d0cd28a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "callback"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "cd7a7fe6-7471-438e-857b-f38c9737b5b2",
+                    "leftValue": "={{ !!$json.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -96,
+        -64
+      ],
+      "id": "8147f52c-06af-47ca-9b11-30cce5425ccb",
+      "name": "Router de entrada"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "b4af898c-970b-423f-be6c-d64cc8b183ec",
+      "name": "Telegram Trigger",
+      "notes": "Trigger de Telegram para leer cuando llegue un mensaje"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.tipo === 'opcion_youtube' ? '🎥 Procesando el video... dame un momento.' : '📄 Procesando el artículo... dame un momento.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        -208
+      ],
+      "id": "38f29dbf-a22c-49e4-b4ab-901624cbfe42",
+      "name": "Avisar procesando"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -208
+      ],
+      "id": "778bd7c2-2578-4064-8b99-9ac3a8f19fd9",
+      "name": "Iniciar procesamiento"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Resolver idioma').item.json.tipo }}",
+                    "rightValue": "opcion_web",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "778b695a-9541-49c4-931d-96aa1bc69d8d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WEB"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "0e74cae1-9582-4f40-b060-45a2becbf3bc",
+                    "leftValue": "={{ $('Resolver idioma').item.json.tipo }}",
+                    "rightValue": "opcion_youtube",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "YOUTUBE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        1264,
+        -208
+      ],
+      "id": "8a577b7d-442a-4808-b0bf-b5959d8b54f4",
+      "name": "Router Web / YouTube"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sacamos la URL original\nconst url = $('Resolver idioma').item.json.url;\n\n// Regex que captura el ID de cualquier formato de YouTube\nconst match = url.match(/(?:youtu\\.be\\/|youtube\\.com\\/(?:embed\\/|v\\/|watch\\?v=|watch\\?.+&v=|shorts\\/))([\\w-]{11})/);\n\nif (match && match[1]) {\n  return [{ json: { video_id: match[1] } }];\n} else {\n  throw new Error(\"No pude encontrar un ID de video válido en esta URL: \" + url);\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        -112
+      ],
+      "id": "aac828fe-0bee-41f7-8d74-595732ca0ec7",
+      "name": "Extraer video ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "let texto = \"\";\nlet rawData = $json.data || $json;\n\n// Si Supadata nos devuelve un texto que parece JSON\nif (typeof rawData === 'string') {\n  try {\n    const parsed = JSON.parse(rawData);\n    texto = parsed.content || parsed.text || rawData;\n  } catch (e) {\n    texto = rawData;\n  }\n} else {\n  texto = rawData.content || rawData.text || JSON.stringify(rawData);\n}\n\n// Si el texto es muy corto, fallback\nif (!texto || texto.length < 50) {\n  texto = \"No se pudo extraer la transcripción del video.\";\n}\n\n// Limitamos a 25.000 caracteres para no exceder el contexto del modelo\ntexto = texto.substring(0, 25000);\n\n// Devolvemos un objeto normalizado para el resto del pipeline\nreturn [{\n  json: {\n    texto: texto,\n    url: $('Resolver idioma').item.json.url,\n    chat_id: $('Resolver idioma').item.json.chat_id,\n    tipo: $('Resolver idioma').item.json.tipo\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1936,
+        -112
+      ],
+      "id": "16f4fef9-40dc-4050-8839-4dabe05e59ac",
+      "name": "Limpiar respuesta Supadata"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.supadata.ai/v1/youtube/transcript?url={{ $('Resolver idioma').item.json.url }}&text=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "YOUR_SUPADATA_API_KEY"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1712,
+        -112
+      ],
+      "id": "2faf6107-e9b1-4a03-9c5e-e9fe09bb0744",
+      "name": "Transcripción (Supadata)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2320,
+        -336
+      ],
+      "id": "aa1d0ca8-4d84-476d-99cc-34c70f62fffa",
+      "name": "Unir fuentes"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.texto }}",
+        "options": {
+          "systemMessage": "=Eres un asistente experto en resumir contenido. \nTu tarea:\n1. Inventa un título corto y atractivo.\n2. Escribe un resumen conciso de máximo 3 párrafos (no más de 1,500 caracteres en total).\n3. Usa un tono explicativo estilo podcast o narrador.\n\nIMPORTANTE: Devuelve el texto en formato plano. NO uses asteriscos (*), ni negritas, ni Markdown. Solo usa texto normal y guiones (-) para las listas.\n\nIDIOMA OBLIGATORIO: \nEl usuario ha elegido el idioma: {{ $('Resolver idioma').item.json.lang }}.\n- Si dice 'original', redacta en el idioma original.\n- Si dice 'es', redacta en Español.\n- Si dice 'en', redacta en Inglés."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2624,
+        -272
+      ],
+      "id": "91316ce6-be5b-49fb-af68-be0171045037",
+      "name": "Agente resumidor",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2576,
+        -80
+      ],
+      "id": "bca102e0-5ccc-4002-a3a2-5e5510a785c4",
+      "name": "Gemini 2.5 Flash Lite"
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "={{ $('Resolver idioma').item.json.chat_id }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {
+          "caption": "=Aqui tienes el audio del resumen, disfrutalo."
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3616,
+        -240
+      ],
+      "id": "3ae91997-de6b-4f44-8907-58eea77ce559",
+      "name": "Enviar resumen audio"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recogemos el texto que generó la IA\nlet texto = $json.output;\n\n// Quitamos todos los asteriscos que puedan romper Telegram\ntexto = texto.replace(/\\*/g, ''); \n// Quitamos los guiones bajos de negrita/cursiva\ntexto = texto.replace(/_/g, ' ');\n\n// Devolvemos el JSON con el campo \"texto_limpio\" que espera el nodo de Telegram\nreturn [{\n  json: {\n    texto_limpio: texto\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2992,
+        -272
+      ],
+      "id": "4da34fdf-ff9d-4819-8b3e-95d2117f9ba4",
+      "name": "Limpiar Markdown"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.message.text || \"\";\nconst chat_id = $json.message.chat.id;\nconst message_id = $json.message.message_id;\n\n// Buscamos un enlace en el texto usando regex\nconst urlMatch = text.match(/(https?:\\/\\/[^\\s]+)|(www\\.[^\\s]+)/);\nconst url = urlMatch ? urlMatch[0] : null;\n\n// Si no hay enlace (ej: \"hola\"), devolvemos acción de saludo\nif (!url) {\n  return [{ json: { accion: 'saludo', chat_id } }];\n}\n\n// Si hay enlace, devolvemos acción de preguntar idioma y guardamos el message_id\nreturn [{ json: { accion: 'preguntar_idioma', url, chat_id, message_id } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        112
+      ],
+      "id": "c8d0c1fc-d65a-4fb7-98a5-d3cb190f3713",
+      "name": "Detectar enlace"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "He detectado un enlace. ¿En qué idioma quieres el resumen?  ///  I've detected a link. In which language would you like the summary?   ",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🌐 Original",
+                    "additionalFields": {
+                      "callback_data": "lang_original"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🇪🇸 Español",
+                    "additionalFields": {
+                      "callback_data": "lang_es"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🇬🇧 Inglés",
+                    "additionalFields": {
+                      "callback_data": "lang_en"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "reply_to_message_id": "={{ $('Telegram Trigger').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        176
+      ],
+      "id": "8c0de41a-1462-4679-a308-bc51d5733a38",
+      "name": "Pedir idioma"
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $json.callback_query.id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "529d36f2-4717-4991-922c-5124eb0137d8",
+      "name": "Confirmar callback"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Leemos directamente del Trigger para evitar que Confirmar callback lo sobrescriba\nconst cb = $('Telegram Trigger').item.json.callback_query;\n\nif (!cb || !cb.message) {\n  throw new Error(\"No se recibió el mensaje del callback desde el Trigger.\");\n}\n\nconst chat_id = cb.message.chat.id;\nconst lang = cb.data.replace('lang_', ''); \n\n// Buscamos la URL del mensaje al que se le hizo reply\nlet url = \"\";\nif (cb.message.reply_to_message && cb.message.reply_to_message.text) {\n  url = cb.message.reply_to_message.text;\n} else if (cb.message.text) {\n  url = cb.message.text; \n}\n\nif (!url || !url.includes(\"http\")) {\n  throw new Error(\"No se encontró la URL original.\");\n}\n\nconst isYoutube = url.includes(\"youtube.com\") || url.includes(\"youtu.be\");\nconst tipo = isYoutube ? 'opcion_youtube' : 'opcion_web';\n\nreturn [{ json: { url, chat_id, tipo, lang } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -112
+      ],
+      "id": "63ed3785-6cf1-4550-91bf-7f2747626688",
+      "name": "Resolver idioma"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b16b6fb0-2597-42d8-abb4-9f6a9f75d0e1",
+              "leftValue": "={{ $json.accion }}",
+              "rightValue": "preguntar_idioma",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        480,
+        48
+      ],
+      "id": "bf93bf37-cf0f-4538-86af-1d57de4189e9",
+      "name": "¿Hay enlace?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7e44084f-e621-41a4-9c97-1ed31571111f",
+              "name": "texto",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "0b9fc9ff-5ff0-47a3-915e-bceebb325257",
+              "name": "url",
+              "value": "={{ $('Resolver idioma').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "e2e0a4f7-1e73-4cf8-a62a-2ac2fe82f8d8",
+              "name": "chat_id",
+              "value": "={{ $('Resolver idioma').item.json.chat_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1792,
+        -432
+      ],
+      "id": "8dd9a2f1-18ad-4850-b5a9-5ef93b5f7b70",
+      "name": "Normalizar contenido web"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $('Resolver idioma').item.json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        -432
+      ],
+      "id": "87f4f13c-ea0c-4113-91d5-a28ca8e1ddc7",
+      "name": "Extraer web (Jina)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/ErXwobaYiN019PkySvjV",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "YOUR_ELEVENLABS_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.texto_limpio.substring(0, 2000), model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.75 } }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3216,
+        -272
+      ],
+      "id": "a54e2d2c-c649-420c-8110-11ea1bccc294",
+      "name": "Generar audio (ElevenLabs)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Resolver idioma').item.json.chat_id }}",
+        "text": "={{ $('Limpiar Markdown').item.json.texto_limpio }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3536,
+        -480
+      ],
+      "id": "7002e2fd-6316-4736-b88e-81401c07512c",
+      "name": "Enviar resumen texto"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "¡Hola! Soy tu asistente. Mándame un enlace de una web o de YouTube y te haré un resumen.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": []
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        16
+      ],
+      "id": "1fc4b16f-46f0-423d-a433-7379321235ef",
+      "name": "Saludo / Pedir enlace"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cc31726c-a2ba-471b-93e9-c6c4961f882d",
+              "name": "texto",
+              "value": "={{ $json.texto }}",
+              "type": "string"
+            },
+            {
+              "id": "88c2a646-e68b-4a77-b14d-abbb9453e448",
+              "name": "url",
+              "value": "={{ $('Resolver idioma').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "d616c56f-a341-46e3-90aa-591a8683f7f5",
+              "name": "chat_id",
+              "value": "={{ $('Resolver idioma').item.json.chat_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2144,
+        -112
+      ],
+      "id": "53192d0c-281b-4290-82eb-420e1da594ac",
+      "name": "Normalizar transcripción"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Router de entrada": {
+      "main": [
+        [
+          {
+            "node": "Confirmar callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Detectar enlace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Router de entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar procesando": {
+      "main": [
+        [
+          {
+            "node": "Iniciar procesamiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Iniciar procesamiento": {
+      "main": [
+        [
+          {
+            "node": "Router Web / YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router Web / YouTube": {
+      "main": [
+        [
+          {
+            "node": "Extraer web (Jina)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extraer video ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer video ID": {
+      "main": [
+        [
+          {
+            "node": "Transcripción (Supadata)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar respuesta Supadata": {
+      "main": [
+        [
+          {
+            "node": "Normalizar transcripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcripción (Supadata)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar respuesta Supadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unir fuentes": {
+      "main": [
+        [
+          {
+            "node": "Agente resumidor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Flash Lite": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente resumidor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente resumidor": {
+      "main": [
+        [
+          {
+            "node": "Limpiar Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar Markdown": {
+      "main": [
+        [
+          {
+            "node": "Generar audio (ElevenLabs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detectar enlace": {
+      "main": [
+        [
+          {
+            "node": "¿Hay enlace?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmar callback": {
+      "main": [
+        [
+          {
+            "node": "Resolver idioma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver idioma": {
+      "main": [
+        [
+          {
+            "node": "Avisar procesando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay enlace?": {
+      "main": [
+        [
+          {
+            "node": "Pedir idioma",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Saludo / Pedir enlace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar contenido web": {
+      "main": [
+        [
+          {
+            "node": "Unir fuentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer web (Jina)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar contenido web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar audio (ElevenLabs)": {
+      "main": [
+        [
+          {
+            "node": "Enviar resumen audio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar resumen texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar transcripción": {
+      "main": [
+        [
+          {
+            "node": "Unir fuentes",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
